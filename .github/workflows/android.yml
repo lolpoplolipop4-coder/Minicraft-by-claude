@@ -1,3 +1,4 @@
+
 name: build apk
 
 on:
@@ -13,20 +14,34 @@ jobs:
       - name: get project
         uses: actions/checkout@v4
 
-      - name: find project
+      - name: extract project
         run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip
+          mkdir game
           unzip -o voxel_sandbox.zip -d game
           find game -name project.godot
+          find game -name export_presets.cfg
 
-      - name: build android
+      - name: locate project
+        id: project
+        run: |
+          file=$(find game -name project.godot -print -quit)
+          if [ -z "$file" ]; then
+            echo "project.godot not found"
+            exit 1
+          fi
+          echo "dir=$(dirname "$file")" >> "$GITHUB_OUTPUT"
+
+      - name: export android apk
         uses: firebelley/godot-export@v6.0.0
         with:
           godot_version: 4.3.0
           export_preset: Android
-          project_path: game
+          project_path: ${{ steps.project.outputs.dir }}
           output_path: build/game.apk
 
-      - name: save apk
+      - name: upload apk
         uses: actions/upload-artifact@v4
         with:
           name: android-apk

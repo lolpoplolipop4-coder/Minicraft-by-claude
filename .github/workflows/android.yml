@@ -1,0 +1,33 @@
+name: build apk
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: get project
+        uses: actions/checkout@v4
+
+      - name: find project
+        run: |
+          unzip -o voxel_sandbox.zip -d game
+          find game -name project.godot
+
+      - name: build android
+        uses: firebelley/godot-export@v6
+        with:
+          godot_version: 4.3.0
+          export_preset: Android
+          project_path: game
+          output_path: build/game.apk
+
+      - name: save apk
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: build/game.apk
